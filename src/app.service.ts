@@ -34,8 +34,6 @@ export class AppService {
     };
   }
 
-  // ...existing code...
-
   async getPlaylistInfo(url: string, limit: number): Promise<VideoInfo[]> {
     try {
       limit = limit || 4;
