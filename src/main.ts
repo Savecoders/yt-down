@@ -14,7 +14,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const loger = new Logger('boostrap');
+  const logger = new Logger('bootstrap');
 
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
@@ -25,8 +25,8 @@ async function bootstrap() {
     }),
   );
 
-  const PORT = 3000;
-  loger.log(`Server runnings on http://localhost:${PORT}`);
-  await app.listen(PORT);
+  const port = process.env.PORT || 3000;
+  logger.log(`Server running on port ${port}`);
+  await app.listen(port);
 }
 bootstrap();
