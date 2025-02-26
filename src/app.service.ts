@@ -10,8 +10,49 @@ export interface VideoInfo {
 
 @Injectable()
 export class AppService {
+  private readonly agent: ytdl.Agent;
+  constructor() {
+    try {
+      const cookiesJson = process.env.YOUTUBE_COOKIE;
+      const cookies = JSON.parse(cookiesJson);
+
+      // Convert cookie array to ytdl-core format
+      const ytdlCookies = cookies.map((cookie) => ({
+        name: cookie.name,
+        value: cookie.value,
+        domain: cookie.domain,
+        path: cookie.path,
+      }));
+
+      const agentOptions: any = {
+        keepAlive: true,
+        keepAliveMsecs: 1000,
+        maxSockets: 100,
+        maxFreeSockets: 10,
+        timeout: 30000,
+      };
+
+      this.agent = ytdl.createAgent(ytdlCookies, agentOptions);
+    } catch (error) {
+      console.error('Error initializing YouTube agent:', error);
+    }
+  }
   getHello(): string {
     return 'Api is running';
+  }
+
+  private getRequestHeaders() {
+    return {
+      agent: this.agent,
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        Connection: 'keep-alive',
+      },
+    };
   }
 
   private getDurationSecondsFormat(lengthSeconds: string): string {
@@ -23,14 +64,7 @@ export class AppService {
 
   async getVideoInfo(url: string): Promise<VideoInfo> {
     try {
-      const info = await ytdl.getInfo(url, {
-        requestOptions: {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          },
-        },
-      });
+      const info = await ytdl.getInfo(url, this.getRequestHeaders());
 
       const duration = this.getDurationSecondsFormat(
         info.videoDetails.lengthSeconds,
@@ -56,7 +90,11 @@ export class AppService {
         );
       }
 
-      const playlist = await ytpl(url, { limit: limit, gl: 'US' });
+      const playlist = await ytpl(url, {
+        limit: limit,
+        gl: 'US',
+        ...this.getRequestHeaders(),
+      });
 
       return Promise.all(
         playlist.items.map(async (item) => {
@@ -80,6 +118,7 @@ export class AppService {
       const videoStream = ytdl(url, {
         quality: 'highest',
         filter: 'audioandvideo',
+        requestOptions: this.getRequestHeaders(),
       });
 
       // Return both the stream and video info
