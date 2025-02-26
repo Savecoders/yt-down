@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as ytdl from '@distube/ytdl-core';
 import * as ytpl from '@distube/ytpl';
 export interface VideoInfo {
@@ -22,16 +22,28 @@ export class AppService {
   }
 
   async getVideoInfo(url: string): Promise<VideoInfo> {
-    const info = await ytdl.getInfo(url);
-    const duration = this.getDurationSecondsFormat(
-      info.videoDetails.lengthSeconds,
-    );
-    return {
-      title: info.videoDetails.title,
-      thumbnail: info.videoDetails.thumbnails[0].url,
-      duration: duration,
-      url: url,
-    };
+    try {
+      const info = await ytdl.getInfo(url, {
+        requestOptions: {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          },
+        },
+      });
+
+      const duration = this.getDurationSecondsFormat(
+        info.videoDetails.lengthSeconds,
+      );
+      return {
+        title: info.videoDetails.title,
+        thumbnail: info.videoDetails.thumbnails[0].url,
+        duration: duration,
+        url: url,
+      };
+    } catch (error) {
+      this.handleYoutubeError(error);
+    }
   }
 
   async getPlaylistInfo(url: string, limit: number): Promise<VideoInfo[]> {
@@ -79,5 +91,27 @@ export class AppService {
     } catch (error) {
       throw new Error(`Error downloading video: ${error.message}`);
     }
+  }
+  private handleYoutubeError(error: any): never {
+    if (error.message.includes('Sign in to confirm')) {
+      throw new HttpException(
+        {
+          status: HttpStatus.TOO_MANY_REQUESTS,
+          error: 'YouTube Rate Limit',
+          message:
+            'YouTube has detected unusual traffic. Please try again later or use a different IP address.',
+          details: error.message,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+    throw new HttpException(
+      {
+        status: HttpStatus.BAD_REQUEST,
+        error: 'YouTube Error',
+        message: error.message,
+      },
+      HttpStatus.BAD_REQUEST,
+    );
   }
 }
