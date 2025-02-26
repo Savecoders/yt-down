@@ -11,6 +11,7 @@ export interface VideoInfo {
 @Injectable()
 export class AppService {
   private readonly agent: ytdl.Agent;
+
   constructor() {
     try {
       const cookiesJson = process.env.YOUTUBE_COOKIE;
@@ -24,11 +25,10 @@ export class AppService {
         path: cookie.path,
       }));
 
+      // Updated agent options to fix keepAlive error
       const agentOptions: any = {
-        keepAlive: true,
-        keepAliveMsecs: 1000,
+        pipelining: 0, // Set pipelining to 0 instead of using keepAlive
         maxSockets: 100,
-        maxFreeSockets: 10,
         timeout: 30000,
       };
 
