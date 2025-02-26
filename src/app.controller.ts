@@ -26,7 +26,7 @@ export class AppController {
       throw new HttpException(
         {
           status: 400,
-          message: `Error processing video`,
+          message: error,
           error: `Error processing video
         Possibly invalid URL or is a private video`,
         },
@@ -49,7 +49,7 @@ export class AppController {
       throw new HttpException(
         {
           status: 400,
-          message: `Error processing playlist`,
+          message: error,
           error: `Error processing playlist
         Possibly invalid URL or is a private playlist`,
         },
@@ -87,7 +87,7 @@ export class AppController {
       throw new HttpException(
         {
           status: 400,
-          message: `Error downloading video`,
+          message: error,
           error: `Error downloading video
         Possibly invalid URL or is a private video`,
         },
