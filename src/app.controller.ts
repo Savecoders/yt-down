@@ -21,12 +21,15 @@ export class AppController {
   @Get('/info')
   async getVideoInfo(@Query('url') url: string) {
     try {
-      return await this.appService.getVideoInfo(url);
+      const video = await this.appService.getVideoInfo(url);
+      console.log(video);
+      return video;
     } catch (error) {
+      console.error('Error processing video:', error);
       throw new HttpException(
         {
           status: 400,
-          message: error,
+          message: `Error processing video: ${error}`,
           error: `Error processing video
         Possibly invalid URL or is a private video`,
         },
@@ -44,12 +47,15 @@ export class AppController {
     @Query('limit') limit: number,
   ) {
     try {
-      return await this.appService.getPlaylistInfo(url, limit);
+      const videoList = await this.appService.getPlaylistInfo(url, limit);
+      console.log(videoList);
+      return videoList;
     } catch (error) {
+      console.error('Error processing playlist:', error);
       throw new HttpException(
         {
           status: 400,
-          message: error,
+          message: `Error processing playlist: ${error}`,
           error: `Error processing playlist
         Possibly invalid URL or is a private playlist`,
         },
