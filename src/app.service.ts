@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as ytdl from '@distube/ytdl-core';
 import * as ytpl from '@distube/ytpl';
+
 export interface VideoInfo {
   title: string;
   thumbnail: string;
@@ -37,6 +38,7 @@ export class AppService {
       console.error('Error initializing YouTube agent:', error);
     }
   }
+
   getHello(): string {
     return 'Api is running';
   }
@@ -82,7 +84,7 @@ export class AppService {
 
   async getPlaylistInfo(url: string, limit: number): Promise<VideoInfo[]> {
     try {
-      limit = limit || 4;
+      limit = limit || 8;
 
       if (!url) {
         throw new Error(
@@ -118,7 +120,6 @@ export class AppService {
       const videoStream = ytdl(url, {
         quality: 'highest',
         filter: 'audioandvideo',
-        requestOptions: this.getRequestHeaders(),
       });
 
       // Return both the stream and video info
@@ -131,6 +132,7 @@ export class AppService {
       throw new Error(`Error downloading video: ${error.message}`);
     }
   }
+
   private handleYoutubeError(error: any): never {
     if (error.message.includes('Sign in to confirm')) {
       throw new HttpException(
